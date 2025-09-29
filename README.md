@@ -4,9 +4,16 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## Available Scripts
 
-In the project directory, you can run:
+In the project directory, you should run first :
 
-### `npm start`
+### `1- npm run server`
+
+Runs the questions in the development mode.\
+Open [http://localhost:8000/questions](http://localhost:8000/questions) to view it in your browser.
+
+then
+
+### `2- npm start`
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.

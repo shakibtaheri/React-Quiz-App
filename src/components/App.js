@@ -6,7 +6,8 @@ import Error from "./Error.js";
 import StartScreen from "./StartScreen.js";
 import Question from "./Question.js";
 import NextButton from "./NextButton.js";
-import Progress from "./progress.js";
+import Progress from "./Progress.js";
+import FinishScreen from "./FinishScreen.js";
 
 const initialState = {
   questions: [],
@@ -15,6 +16,7 @@ const initialState = {
   index: 0,
   answer: null,
   points: 0,
+  highscore: 0,
 };
 
 function reducer(state, action) {
@@ -40,6 +42,17 @@ function reducer(state, action) {
       };
     case "nextQuestion":
       return { ...state, index: state.index + 1, answer: null };
+    case "finish":
+      return {
+        ...state,
+        status: "finish",
+        highscore:
+          state.points > state.highscore ? state.points : state.highscore,
+      };
+    case "restart":
+      // Both are correct
+      // return { ...state, status: "ready", index: 0, answer: null };
+      return { ...initialState, questions: state.questions, status: "ready" };
     default:
       throw new Error("Action unknown");
   }
@@ -47,13 +60,18 @@ function reducer(state, action) {
 // console.log(initialState);
 
 export default function App() {
-  const [{ questions, status, message, index, answer }, dispatch] = useReducer(
-    reducer,
-    initialState
-  );
+  const [
+    { questions, status, message, index, answer, points, highscore },
+    dispatch,
+  ] = useReducer(reducer, initialState);
   console.log(answer);
   console.log(index);
   const numQuestions = questions.length;
+
+  // Second Way
+  // const numpoints = questions.map((el) => el.points);
+  const maxPoints = questions.reduce((acc, cur) => acc + cur.points, 0);
+  console.log(maxPoints);
 
   useEffect(function () {
     async function fetchQuestions() {
@@ -69,15 +87,6 @@ export default function App() {
     fetchQuestions();
   }, []);
 
-  //Second way fewtch data with catch error
-
-  // useEffect(function () {
-  //   fetch("http://localhost:8000/questions")
-  //     .then((res) => res.json())
-  //     .then((data) => console.log(data))
-  //     .catch((err) => console.error(err.message));
-  // }, []);
-
   return (
     <div className="app">
       <Headers />
@@ -89,14 +98,34 @@ export default function App() {
         )}
         {status === "active" && (
           <>
-            <Progress />
+            <Progress
+              index={index}
+              numQuestions={numQuestions}
+              points={points}
+              maxPoints={maxPoints}
+              answer={answer}
+            />
             <Question
               question={questions[index]}
               dispatch={dispatch}
               answer={answer}
             />
-            <NextButton dispatch={dispatch} answer={answer} />
+
+            <NextButton
+              dispatch={dispatch}
+              answer={answer}
+              index={index}
+              numQuestions={numQuestions}
+            />
           </>
+        )}
+        {status === "finish" && (
+          <FinishScreen
+            points={points}
+            maxPoints={maxPoints}
+            highscore={highscore}
+            dispatch={dispatch}
+          />
         )}
       </Main>
     </div>
