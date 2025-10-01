@@ -8,6 +8,8 @@ import Question from "./Question.js";
 import NextButton from "./NextButton.js";
 import Progress from "./Progress.js";
 import FinishScreen from "./FinishScreen.js";
+import Footer from "./Footer.js";
+import Timer from "./Timer.js";
 
 const initialState = {
   questions: [],
@@ -17,21 +19,24 @@ const initialState = {
   answer: null,
   points: 0,
   highscore: 0,
+  secondsRemaining: null,
 };
-
+const SECS_PER_QUESTION = 30;
 function reducer(state, action) {
   switch (action.type) {
     case "dataReceived":
-      // console.log(state);
       return { ...state, questions: action.payload, status: "ready" };
     case "dataFaild":
       console.log(state);
       return { ...state, status: "error", message: action.payload };
     case "start":
-      return { ...state, status: "active" };
+      return {
+        ...state,
+        status: "active",
+        secondsRemaining: state.questions.length * SECS_PER_QUESTION,
+      };
     case "newAnswer":
       const currentQuestion = state.questions.at(state.index);
-      // console.log(currentQuestion);
       return {
         ...state,
         answer: action.payload,
@@ -53,25 +58,37 @@ function reducer(state, action) {
       // Both are correct
       // return { ...state, status: "ready", index: 0, answer: null };
       return { ...initialState, questions: state.questions, status: "ready" };
+    case "tick":
+      return {
+        ...state,
+        secondsRemaining: state.secondsRemaining - 1,
+        status: state.secondsRemaining === 0 ? "finish" : state.status,
+      };
     default:
       throw new Error("Action unknown");
   }
 }
-// console.log(initialState);
 
 export default function App() {
   const [
-    { questions, status, message, index, answer, points, highscore },
+    {
+      questions,
+      status,
+      message,
+      index,
+      answer,
+      points,
+      highscore,
+      secondsRemaining,
+    },
     dispatch,
   ] = useReducer(reducer, initialState);
-  console.log(answer);
-  console.log(index);
+
   const numQuestions = questions.length;
 
   // Second Way
   // const numpoints = questions.map((el) => el.points);
   const maxPoints = questions.reduce((acc, cur) => acc + cur.points, 0);
-  console.log(maxPoints);
 
   useEffect(function () {
     async function fetchQuestions() {
@@ -110,13 +127,15 @@ export default function App() {
               dispatch={dispatch}
               answer={answer}
             />
-
-            <NextButton
-              dispatch={dispatch}
-              answer={answer}
-              index={index}
-              numQuestions={numQuestions}
-            />
+            <Footer>
+              <Timer dispatch={dispatch} secondsRemaining={secondsRemaining} />
+              <NextButton
+                dispatch={dispatch}
+                answer={answer}
+                index={index}
+                numQuestions={numQuestions}
+              />
+            </Footer>
           </>
         )}
         {status === "finish" && (
